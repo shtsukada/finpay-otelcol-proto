@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package finpay.v1;
+
+option go_package = "github.com/shtsukada/finpay-otelcol-proto/gen/go/finpay/v1;finpayv1";
+
+service FinpayService {
+  rpc CreateTransfer(CreateTransferRequest) returns (CreateTransferResponse);
+  rpc GetTransfer(GetTransferRequest) returns (GetTransferResponse);
+}
+
+message Money {
+  string currency = 1; // "JPY"
+  int64 amount = 2; // minor unit (JPY: yen)
+}
+
+message CreateTransferRequest {
+  string client_transfer_id = 1; // client-side unique id
+  string idempotency_key = 2; // SHOULD NOT be used as Prom label
+  Money amount = 3;
+  string to_account = 4;
+}
+
+message CreateTransferResponse {
+  string transfer_id = 1; // server-side id
+  string status = 2; // "ACCEPTED" etc (MVP)
+}
+
+message GetTransferRequest {
+  string transfer_id = 1;
+}
+
+message GetTransferResponse {
+  string transfer_id = 1;
+  string status = 2;
+  string client_transfer_id = 3;
+  Money amount = 4;
+}
