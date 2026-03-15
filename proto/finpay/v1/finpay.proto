@@ -14,25 +14,45 @@ message Money {
   int64 amount = 2; // minor unit (JPY: yen)
 }
 
+enum TransferStatus {
+  TRANSFER_STATUS_UNSPECIFIED = 0;
+  TRANSFER_STATUS_ACCEPTED = 1;
+  TRANSFER_STATUS_PROCESSING = 2;
+  TRANSFER_STATUS_SUCCEEDED = 3;
+  TRANSFER_STATUS_FAILED = 4;
+}
+
 message CreateTransferRequest {
-  string client_transfer_id = 1; // client-side unique id
-  string idempotency_key = 2; // SHOULD NOT be used as Prom label
-  Money amount = 3;
-  string to_account = 4;
+  string client_id = 1; // logical client identifier
+  string key_id = 2; // public key selector for rotation
+  string nonce = 3; // one-time nonce for replay protection
+  int64 timestamp = 4; // unix seconds
+  string signature = 5; // base64-encoded signature over canonical string
+
+  string client_transfer_id = 6; // client-side unique id
+  string idempotency_key = 7; // SHOULD NOT be used as Prom label
+  Money amount = 8;
+  string to_account = 9;
 }
 
 message CreateTransferResponse {
   string transfer_id = 1; // server-side id
-  string status = 2; // "ACCEPTED" etc (MVP)
+  TransferStatus status = 2;
 }
 
 message GetTransferRequest {
-  string transfer_id = 1;
+  string client_id = 1;
+  string key_id = 2;
+  string nonce = 3;
+  int64 timestamp = 4; // unix seconds
+  string signature = 5; // base64-encoded signature over canonical string
+
+  string transfer_id = 6;
 }
 
 message GetTransferResponse {
   string transfer_id = 1;
-  string status = 2;
+  TransferStatus status = 2;
   string client_transfer_id = 3;
   Money amount = 4;
 }
