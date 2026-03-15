@@ -21,6 +21,61 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type TransferStatus int32
+
+const (
+	TransferStatus_TRANSFER_STATUS_UNSPECIFIED TransferStatus = 0
+	TransferStatus_TRANSFER_STATUS_ACCEPTED    TransferStatus = 1
+	TransferStatus_TRANSFER_STATUS_PROCESSING  TransferStatus = 2
+	TransferStatus_TRANSFER_STATUS_SUCCEEDED   TransferStatus = 3
+	TransferStatus_TRANSFER_STATUS_FAILED      TransferStatus = 4
+)
+
+// Enum value maps for TransferStatus.
+var (
+	TransferStatus_name = map[int32]string{
+		0: "TRANSFER_STATUS_UNSPECIFIED",
+		1: "TRANSFER_STATUS_ACCEPTED",
+		2: "TRANSFER_STATUS_PROCESSING",
+		3: "TRANSFER_STATUS_SUCCEEDED",
+		4: "TRANSFER_STATUS_FAILED",
+	}
+	TransferStatus_value = map[string]int32{
+		"TRANSFER_STATUS_UNSPECIFIED": 0,
+		"TRANSFER_STATUS_ACCEPTED":    1,
+		"TRANSFER_STATUS_PROCESSING":  2,
+		"TRANSFER_STATUS_SUCCEEDED":   3,
+		"TRANSFER_STATUS_FAILED":      4,
+	}
+)
+
+func (x TransferStatus) Enum() *TransferStatus {
+	p := new(TransferStatus)
+	*p = x
+	return p
+}
+
+func (x TransferStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TransferStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_finpay_v1_finpay_proto_enumTypes[0].Descriptor()
+}
+
+func (TransferStatus) Type() protoreflect.EnumType {
+	return &file_finpay_v1_finpay_proto_enumTypes[0]
+}
+
+func (x TransferStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TransferStatus.Descriptor instead.
+func (TransferStatus) EnumDescriptor() ([]byte, []int) {
+	return file_finpay_v1_finpay_proto_rawDescGZIP(), []int{0}
+}
+
 type Money struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Currency      string                 `protobuf:"bytes,1,opt,name=currency,proto3" json:"currency,omitempty"` // "JPY"
@@ -75,10 +130,15 @@ func (x *Money) GetAmount() int64 {
 
 type CreateTransferRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	ClientTransferId string                 `protobuf:"bytes,1,opt,name=client_transfer_id,json=clientTransferId,proto3" json:"client_transfer_id,omitempty"` // client-side unique id
-	IdempotencyKey   string                 `protobuf:"bytes,2,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`         // SHOULD NOT be used as Prom label
-	Amount           *Money                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	ToAccount        string                 `protobuf:"bytes,4,opt,name=to_account,json=toAccount,proto3" json:"to_account,omitempty"`
+	ClientId         string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`                           // logical client identifier
+	KeyId            string                 `protobuf:"bytes,2,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`                                    // public key selector for rotation
+	Nonce            string                 `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`                                                 // one-time nonce for replay protection
+	Timestamp        int64                  `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`                                        // unix seconds
+	Signature        string                 `protobuf:"bytes,5,opt,name=signature,proto3" json:"signature,omitempty"`                                         // base64-encoded signature over canonical string
+	ClientTransferId string                 `protobuf:"bytes,6,opt,name=client_transfer_id,json=clientTransferId,proto3" json:"client_transfer_id,omitempty"` // client-side unique id
+	IdempotencyKey   string                 `protobuf:"bytes,7,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`         // SHOULD NOT be used as Prom label
+	Amount           *Money                 `protobuf:"bytes,8,opt,name=amount,proto3" json:"amount,omitempty"`
+	ToAccount        string                 `protobuf:"bytes,9,opt,name=to_account,json=toAccount,proto3" json:"to_account,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -113,6 +173,41 @@ func (*CreateTransferRequest) Descriptor() ([]byte, []int) {
 	return file_finpay_v1_finpay_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *CreateTransferRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *CreateTransferRequest) GetKeyId() string {
+	if x != nil {
+		return x.KeyId
+	}
+	return ""
+}
+
+func (x *CreateTransferRequest) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+func (x *CreateTransferRequest) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *CreateTransferRequest) GetSignature() string {
+	if x != nil {
+		return x.Signature
+	}
+	return ""
+}
+
 func (x *CreateTransferRequest) GetClientTransferId() string {
 	if x != nil {
 		return x.ClientTransferId
@@ -144,7 +239,7 @@ func (x *CreateTransferRequest) GetToAccount() string {
 type CreateTransferResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TransferId    string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"` // server-side id
-	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`                           // "ACCEPTED" etc (MVP)
+	Status        TransferStatus         `protobuf:"varint,2,opt,name=status,proto3,enum=finpay.v1.TransferStatus" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -186,16 +281,21 @@ func (x *CreateTransferResponse) GetTransferId() string {
 	return ""
 }
 
-func (x *CreateTransferResponse) GetStatus() string {
+func (x *CreateTransferResponse) GetStatus() TransferStatus {
 	if x != nil {
 		return x.Status
 	}
-	return ""
+	return TransferStatus_TRANSFER_STATUS_UNSPECIFIED
 }
 
 type GetTransferRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TransferId    string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	KeyId         string                 `protobuf:"bytes,2,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`
+	Nonce         string                 `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"` // unix seconds
+	Signature     string                 `protobuf:"bytes,5,opt,name=signature,proto3" json:"signature,omitempty"`  // base64-encoded signature over canonical string
+	TransferId    string                 `protobuf:"bytes,6,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -230,6 +330,41 @@ func (*GetTransferRequest) Descriptor() ([]byte, []int) {
 	return file_finpay_v1_finpay_proto_rawDescGZIP(), []int{3}
 }
 
+func (x *GetTransferRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *GetTransferRequest) GetKeyId() string {
+	if x != nil {
+		return x.KeyId
+	}
+	return ""
+}
+
+func (x *GetTransferRequest) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+func (x *GetTransferRequest) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *GetTransferRequest) GetSignature() string {
+	if x != nil {
+		return x.Signature
+	}
+	return ""
+}
+
 func (x *GetTransferRequest) GetTransferId() string {
 	if x != nil {
 		return x.TransferId
@@ -240,7 +375,7 @@ func (x *GetTransferRequest) GetTransferId() string {
 type GetTransferResponse struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	TransferId       string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
-	Status           string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Status           TransferStatus         `protobuf:"varint,2,opt,name=status,proto3,enum=finpay.v1.TransferStatus" json:"status,omitempty"`
 	ClientTransferId string                 `protobuf:"bytes,3,opt,name=client_transfer_id,json=clientTransferId,proto3" json:"client_transfer_id,omitempty"`
 	Amount           *Money                 `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
 	unknownFields    protoimpl.UnknownFields
@@ -284,11 +419,11 @@ func (x *GetTransferResponse) GetTransferId() string {
 	return ""
 }
 
-func (x *GetTransferResponse) GetStatus() string {
+func (x *GetTransferResponse) GetStatus() TransferStatus {
 	if x != nil {
 		return x.Status
 	}
-	return ""
+	return TransferStatus_TRANSFER_STATUS_UNSPECIFIED
 }
 
 func (x *GetTransferResponse) GetClientTransferId() string {
@@ -312,26 +447,42 @@ const file_finpay_v1_finpay_proto_rawDesc = "" +
 	"\x16finpay/v1/finpay.proto\x12\tfinpay.v1\";\n" +
 	"\x05Money\x12\x1a\n" +
 	"\bcurrency\x18\x01 \x01(\tR\bcurrency\x12\x16\n" +
-	"\x06amount\x18\x02 \x01(\x03R\x06amount\"\xb7\x01\n" +
-	"\x15CreateTransferRequest\x12,\n" +
-	"\x12client_transfer_id\x18\x01 \x01(\tR\x10clientTransferId\x12'\n" +
-	"\x0fidempotency_key\x18\x02 \x01(\tR\x0eidempotencyKey\x12(\n" +
-	"\x06amount\x18\x03 \x01(\v2\x10.finpay.v1.MoneyR\x06amount\x12\x1d\n" +
+	"\x06amount\x18\x02 \x01(\x03R\x06amount\"\xbd\x02\n" +
+	"\x15CreateTransferRequest\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x15\n" +
+	"\x06key_id\x18\x02 \x01(\tR\x05keyId\x12\x14\n" +
+	"\x05nonce\x18\x03 \x01(\tR\x05nonce\x12\x1c\n" +
+	"\ttimestamp\x18\x04 \x01(\x03R\ttimestamp\x12\x1c\n" +
+	"\tsignature\x18\x05 \x01(\tR\tsignature\x12,\n" +
+	"\x12client_transfer_id\x18\x06 \x01(\tR\x10clientTransferId\x12'\n" +
+	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKey\x12(\n" +
+	"\x06amount\x18\b \x01(\v2\x10.finpay.v1.MoneyR\x06amount\x12\x1d\n" +
 	"\n" +
-	"to_account\x18\x04 \x01(\tR\ttoAccount\"Q\n" +
+	"to_account\x18\t \x01(\tR\ttoAccount\"l\n" +
 	"\x16CreateTransferResponse\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
-	"transferId\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\"5\n" +
-	"\x12GetTransferRequest\x12\x1f\n" +
-	"\vtransfer_id\x18\x01 \x01(\tR\n" +
-	"transferId\"\xa6\x01\n" +
+	"transferId\x121\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x19.finpay.v1.TransferStatusR\x06status\"\xbb\x01\n" +
+	"\x12GetTransferRequest\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x15\n" +
+	"\x06key_id\x18\x02 \x01(\tR\x05keyId\x12\x14\n" +
+	"\x05nonce\x18\x03 \x01(\tR\x05nonce\x12\x1c\n" +
+	"\ttimestamp\x18\x04 \x01(\x03R\ttimestamp\x12\x1c\n" +
+	"\tsignature\x18\x05 \x01(\tR\tsignature\x12\x1f\n" +
+	"\vtransfer_id\x18\x06 \x01(\tR\n" +
+	"transferId\"\xc1\x01\n" +
 	"\x13GetTransferResponse\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
-	"transferId\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\x12,\n" +
+	"transferId\x121\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x19.finpay.v1.TransferStatusR\x06status\x12,\n" +
 	"\x12client_transfer_id\x18\x03 \x01(\tR\x10clientTransferId\x12(\n" +
-	"\x06amount\x18\x04 \x01(\v2\x10.finpay.v1.MoneyR\x06amount2\xb4\x01\n" +
+	"\x06amount\x18\x04 \x01(\v2\x10.finpay.v1.MoneyR\x06amount*\xaa\x01\n" +
+	"\x0eTransferStatus\x12\x1f\n" +
+	"\x1bTRANSFER_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18TRANSFER_STATUS_ACCEPTED\x10\x01\x12\x1e\n" +
+	"\x1aTRANSFER_STATUS_PROCESSING\x10\x02\x12\x1d\n" +
+	"\x19TRANSFER_STATUS_SUCCEEDED\x10\x03\x12\x1a\n" +
+	"\x16TRANSFER_STATUS_FAILED\x10\x042\xb4\x01\n" +
 	"\rFinpayService\x12U\n" +
 	"\x0eCreateTransfer\x12 .finpay.v1.CreateTransferRequest\x1a!.finpay.v1.CreateTransferResponse\x12L\n" +
 	"\vGetTransfer\x12\x1d.finpay.v1.GetTransferRequest\x1a\x1e.finpay.v1.GetTransferResponseBEZCgithub.com/shtsukada/finpay-otelcol-proto/gen/go/finpay/v1;finpayv1b\x06proto3"
@@ -348,26 +499,30 @@ func file_finpay_v1_finpay_proto_rawDescGZIP() []byte {
 	return file_finpay_v1_finpay_proto_rawDescData
 }
 
+var file_finpay_v1_finpay_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_finpay_v1_finpay_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_finpay_v1_finpay_proto_goTypes = []any{
-	(*Money)(nil),                  // 0: finpay.v1.Money
-	(*CreateTransferRequest)(nil),  // 1: finpay.v1.CreateTransferRequest
-	(*CreateTransferResponse)(nil), // 2: finpay.v1.CreateTransferResponse
-	(*GetTransferRequest)(nil),     // 3: finpay.v1.GetTransferRequest
-	(*GetTransferResponse)(nil),    // 4: finpay.v1.GetTransferResponse
+	(TransferStatus)(0),            // 0: finpay.v1.TransferStatus
+	(*Money)(nil),                  // 1: finpay.v1.Money
+	(*CreateTransferRequest)(nil),  // 2: finpay.v1.CreateTransferRequest
+	(*CreateTransferResponse)(nil), // 3: finpay.v1.CreateTransferResponse
+	(*GetTransferRequest)(nil),     // 4: finpay.v1.GetTransferRequest
+	(*GetTransferResponse)(nil),    // 5: finpay.v1.GetTransferResponse
 }
 var file_finpay_v1_finpay_proto_depIdxs = []int32{
-	0, // 0: finpay.v1.CreateTransferRequest.amount:type_name -> finpay.v1.Money
-	0, // 1: finpay.v1.GetTransferResponse.amount:type_name -> finpay.v1.Money
-	1, // 2: finpay.v1.FinpayService.CreateTransfer:input_type -> finpay.v1.CreateTransferRequest
-	3, // 3: finpay.v1.FinpayService.GetTransfer:input_type -> finpay.v1.GetTransferRequest
-	2, // 4: finpay.v1.FinpayService.CreateTransfer:output_type -> finpay.v1.CreateTransferResponse
-	4, // 5: finpay.v1.FinpayService.GetTransfer:output_type -> finpay.v1.GetTransferResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 0: finpay.v1.CreateTransferRequest.amount:type_name -> finpay.v1.Money
+	0, // 1: finpay.v1.CreateTransferResponse.status:type_name -> finpay.v1.TransferStatus
+	0, // 2: finpay.v1.GetTransferResponse.status:type_name -> finpay.v1.TransferStatus
+	1, // 3: finpay.v1.GetTransferResponse.amount:type_name -> finpay.v1.Money
+	2, // 4: finpay.v1.FinpayService.CreateTransfer:input_type -> finpay.v1.CreateTransferRequest
+	4, // 5: finpay.v1.FinpayService.GetTransfer:input_type -> finpay.v1.GetTransferRequest
+	3, // 6: finpay.v1.FinpayService.CreateTransfer:output_type -> finpay.v1.CreateTransferResponse
+	5, // 7: finpay.v1.FinpayService.GetTransfer:output_type -> finpay.v1.GetTransferResponse
+	6, // [6:8] is the sub-list for method output_type
+	4, // [4:6] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_finpay_v1_finpay_proto_init() }
@@ -380,13 +535,14 @@ func file_finpay_v1_finpay_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_finpay_v1_finpay_proto_rawDesc), len(file_finpay_v1_finpay_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_finpay_v1_finpay_proto_goTypes,
 		DependencyIndexes: file_finpay_v1_finpay_proto_depIdxs,
+		EnumInfos:         file_finpay_v1_finpay_proto_enumTypes,
 		MessageInfos:      file_finpay_v1_finpay_proto_msgTypes,
 	}.Build()
 	File_finpay_v1_finpay_proto = out.File
