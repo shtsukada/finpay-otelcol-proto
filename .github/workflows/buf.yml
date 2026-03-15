@@ -11,6 +11,8 @@ jobs:
         with:
           fetch-depth: 0
 
+      - run: git fetch origin main:main
+
       - uses: bufbuild/buf-setup-action@v1
 
       - run: make lint
