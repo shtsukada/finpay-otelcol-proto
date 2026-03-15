@@ -80,12 +80,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          files="$(git ls-files '*.sh')"
-          if [ -z "$files" ]; then
+          if ! git ls-files '*.sh' | grep -q .; then
             echo "no shell scripts"
             exit 0
           fi
-          shellcheck -x $files
+          git ls-files '*.sh' | xargs shellcheck -x
 
   go-test:
     name: go test/vet
