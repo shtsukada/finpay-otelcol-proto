@@ -1,19 +1,20 @@
 # finpay-otelcol-proto
 
-`finpay-otelcol` の gRPC API 定義（`.proto`）とコード生成を管理するリポジトリです。  
-このリポは **Go module としてタグ公開**し、`finpay-otelcol-app` から `go get ...@vX.Y.Z` で参照される前提です。
+`finpay-otelcol` の gRPC API 定義（`.proto`）とコード生成を管理するリポジトリです。
+このリポは --Go module としてタグ公開--し、`finpay-otelcol-app` から `go get ...@vX.Y.Z` で参照される前提です。
 
 - Source of truth: `proto/` 配下の `.proto`
 - Tooling: `buf`（lint / format / generate / breaking）
-- Generated code: `gen/go/...`（**生成物はコミットする**方針）
+- Generated code: `gen/go/...`（--生成物はコミットする--方針）
 
-> ⚠️ 生成物をコミットすることで、利用側（app）は `buf/protoc` なしで `go get` するだけで使えます。  
+> 生成物をコミットすることで、利用側（app）は `buf/protoc` なしで `go get` するだけで使えます。
 > その代わり、`.proto` 変更時は必ず `make generate` → 生成物コミットが必要です。
 
 ---
 
 ## Repository layout
 
+```bash
 finpay-otelcol-proto/
 ├─ proto/
 │ └─ finpay/v1/finpay.proto
@@ -23,6 +24,7 @@ finpay-otelcol-proto/
 ├─ buf.gen.yaml
 ├─ Makefile
 └─ go.mod
+```
 
 ---
 
@@ -48,24 +50,93 @@ make format
 make generate
 ```
 
-API / contract notes (important)
+## Versioning policy
 
-1) Backward compatibility
+このリポジトリの公開バージョンはSemVer(`vMAJOR.MINOR.PATCH`)で管理します。
+- MAJOR
+  - 既存利用者に影響する破壊的変更を含む場合
+- MINOR
+  - 後方互換を保った機能追加
+  - 例:新しい message / rpc / field の追加
+- PATCH
+  - 後方互換に影響しない修正
+  - 例:コメント修正、README修正、精製物更新のみ、整形のみ
+このリポジトリを参照する`finpay-otelcol-app` では、 `go get ...@vX.Y.Z` のように明示的なタグで依存を固定します。
 
-- フィールド番号は 再利用しない
+## Backward compatibility
+
+このリポジトリでは `.proto` の変更に対して後方互換性を原則として維持します。
+互換性の破壊は `buf breaking` で検知し、CIでも必須チェックとします。
+
+### 基本ルール
+
+- fieldの番号は 再利用しない
 - 削除する場合は reserved を使う
+- 削除した field 名も必要に応じて reserved にする
 - enum 値も同様に reserved で管理する
-- breaking は buf breaking で検知する（CIで必須）
+- 既存利用者に影響する変更は breaking change として扱う
 
-1) Error model is defined in app (gRPC status)
+## Reserved policy
 
-- このリポは API 形（messages/services）を提供します。
-- Unauthenticated / FailedPrecondition / AlreadyExists / Unavailable 等の ステータス運用は app 側の契約です（設計は root の DESIGN.md を参照）。
+`reserved` は、過去に使っていたfield番号や名前を再利用しないための宣言です。
+これにより、将来の変更で古いクライアントとの衝突や誤解釈を防ぎます。
 
-1) High-cardinality fields
+### 使う場面
 
-- transfer_id / idempotency_key 等は Observability 上の high-cardinality になり得ます。
-- Prometheusラベルにはしない運用は app 側で守ります（このリポはフィールド定義のみ）。
+- fieldを削除した時
+- field名を廃止した時
+- enum valueを削除した時
+
+例
+```proto
+message CreateTransferRequest {
+  reserved 3;
+  reserved "legacy_note";
+}
+```
+
+### 運用ルール
+
+- 削除だけして終わりにしない
+- 「使わなくなった番号・名前」は再利用せずreservedに残す
+- reservedの追加自体は、互換性維持のための対応として扱う
+
+## What is treated as a breaking change
+
+このリポジトリでは、例えば次のような変更をbreaking changeとして扱います。
+- 既存の service / rpc / message / field を削除する
+- 既存の field の番号を変更する
+- 既存fieldの方を互換性なく変更する
+- enum value を互換性なく変更・削除する
+- パッケージや公開APIの参照パスに影響する変更を行う
+
+迷った場合は、既存の`finpay-otelcol-app`がそのまま更新なしで取り込めるかを基準に判断します。
+そのまま取り込めない可能性があるならbreaking changeとみなします。
+
+## Procedure for introducing a breaking change
+
+breaking changeを入れる場合は、次の流れで進めます。
+1. その変更が本当にbreakingか判断する
+  - 既存利用者に影響するか
+  - 代替としてfield追加で吸収できないか
+2. 必要なら`reserved`を追加する
+  - 削除した番号・名前・enum valueを保護する
+3. `.proto`を修正する
+4. Lint / format / generate / breaking check を通す
+```bash
+make lint
+make format
+make generate
+make breaking
+```
+5. 生成物の差分をコミットする
+6. PRを作成し、CIをgreenにする
+7. mainにマージ後、MAJOR version を上げてtagを切る
+8. `finpay-otelcol-app`側で依存versionを更新する
+  - `go get ...@v2.0.0`
+  - 必要なコード修正もapp側で行う
+
+breaking change は、README・PR・tagの3点でわかる状態にします。
 
 ### CI policy
 
