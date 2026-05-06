@@ -30,6 +30,55 @@ finpay-otelcol-proto/
 
 ## Quickstart
 
+## Usage (最小例)
+
+
+```Go
+package main
+
+import (
+	"context"
+	"log"
+	"time"
+
+	pb "github.com/shtsukada/finpay-otelcol-proto/gen/go/finpay/v1"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+)
+
+func main() {
+	conn, err := grpc.Dial(
+		"localhost:50051",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	client := pb.NewFinpayServiceClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := client.CreateTransfer(ctx, &pb.CreateTransferRequest{
+		FromAccountId: "acct-1",
+		ToAccountId:   "acct-2",
+		Amount: &pb.Money{
+			Currency: "JPY",
+			Amount:   1000,
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("transfer_id=%s status=%s", resp.TransferId, resp.Status)
+}
+
+```
+
 ### Prerequisites
 
 - `buf`（推奨：バージョン固定。例：`buf --version` をREADME/CIで確認）
