@@ -129,16 +129,18 @@ func (x *Money) GetAmount() int64 {
 }
 
 type CreateTransferRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	ClientId         string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`                           // logical client identifier
-	KeyId            string                 `protobuf:"bytes,2,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`                                    // public key selector for rotation
-	Nonce            string                 `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`                                                 // one-time nonce for replay protection
-	Timestamp        int64                  `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`                                        // unix seconds
-	Signature        string                 `protobuf:"bytes,5,opt,name=signature,proto3" json:"signature,omitempty"`                                         // base64-encoded signature over canonical string
-	ClientTransferId string                 `protobuf:"bytes,6,opt,name=client_transfer_id,json=clientTransferId,proto3" json:"client_transfer_id,omitempty"` // client-side unique id
-	IdempotencyKey   string                 `protobuf:"bytes,7,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`         // SHOULD NOT be used as Prom label
-	Amount           *Money                 `protobuf:"bytes,8,opt,name=amount,proto3" json:"amount,omitempty"`
-	ToAccount        string                 `protobuf:"bytes,9,opt,name=to_account,json=toAccount,proto3" json:"to_account,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Authentication and replay protection fields.
+	ClientId  string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	KeyId     string `protobuf:"bytes,2,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`
+	Nonce     string `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Timestamp int64  `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Signature string `protobuf:"bytes,5,opt,name=signature,proto3" json:"signature,omitempty"`
+	// Transfer fields
+	ClientTransferId string `protobuf:"bytes,6,opt,name=client_transfer_id,json=clientTransferId,proto3" json:"client_transfer_id,omitempty"`
+	IdempotencyKey   string `protobuf:"bytes,7,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	Amount           *Money `protobuf:"bytes,8,opt,name=amount,proto3" json:"amount,omitempty"`
+	ToAccount        string `protobuf:"bytes,9,opt,name=to_account,json=toAccount,proto3" json:"to_account,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -289,13 +291,15 @@ func (x *CreateTransferResponse) GetStatus() TransferStatus {
 }
 
 type GetTransferRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	KeyId         string                 `protobuf:"bytes,2,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`
-	Nonce         string                 `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	Timestamp     int64                  `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"` // unix seconds
-	Signature     string                 `protobuf:"bytes,5,opt,name=signature,proto3" json:"signature,omitempty"`  // base64-encoded signature over canonical string
-	TransferId    string                 `protobuf:"bytes,6,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Authentication and replay protection fields
+	ClientId  string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	KeyId     string `protobuf:"bytes,2,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`
+	Nonce     string `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Timestamp int64  `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Signature string `protobuf:"bytes,5,opt,name=signature,proto3" json:"signature,omitempty"`
+	// Query fields
+	TransferId    string `protobuf:"bytes,6,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

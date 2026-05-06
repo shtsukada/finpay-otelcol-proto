@@ -23,14 +23,16 @@ enum TransferStatus {
 }
 
 message CreateTransferRequest {
-  string client_id = 1; // logical client identifier
-  string key_id = 2; // public key selector for rotation
-  string nonce = 3; // one-time nonce for replay protection
-  int64 timestamp = 4; // unix seconds
-  string signature = 5; // base64-encoded signature over canonical string
+  // Authentication and replay protection fields.
+  string client_id = 1;
+  string key_id = 2;
+  string nonce = 3;
+  int64 timestamp = 4;
+  string signature = 5;
 
-  string client_transfer_id = 6; // client-side unique id
-  string idempotency_key = 7; // SHOULD NOT be used as Prom label
+  // Transfer fields
+  string client_transfer_id = 6;
+  string idempotency_key = 7;
   Money amount = 8;
   string to_account = 9;
 }
@@ -41,12 +43,14 @@ message CreateTransferResponse {
 }
 
 message GetTransferRequest {
+  // Authentication and replay protection fields
   string client_id = 1;
   string key_id = 2;
   string nonce = 3;
-  int64 timestamp = 4; // unix seconds
-  string signature = 5; // base64-encoded signature over canonical string
+  int64 timestamp = 4;
+  string signature = 5;
 
+  // Query fields
   string transfer_id = 6;
 }
 
