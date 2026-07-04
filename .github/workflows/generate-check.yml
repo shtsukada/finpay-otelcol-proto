@@ -1,18 +1,44 @@
 name: generate-check
+
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  gen:
+  generate-check:
+    name: Generate check
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: bufbuild/buf-setup-action@v1
-      - uses: actions/setup-go@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup buf
+        uses: bufbuild/buf-setup-action@v1
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: make generate
-      - run: |
-          git diff --exit-code || (echo "Generated files differ. Run: make generate" && exit 1)
-      - run: go list ./...
-      - run: go test ./...
+
+      - name: Generate
+        run: make generate
+
+      - name: Check generated files are committed
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated files differ. Run: make generate and commit the changes."
+            echo
+            git status --short
+            echo
+            git diff --exit-code || true
+            exit 1
+          fi
+
+      - name: Verify Go packages
+        run: go list ./...
+
+      - name: Run tests
+        run: go test ./...
