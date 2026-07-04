@@ -1,4 +1,4 @@
-.PHONY: lint format breaking generate
+.PHONY: lint format generate breaking verify-go check
 
 lint:
 	buf lint
@@ -6,9 +6,14 @@ lint:
 format:
 	buf format -w
 
-breaking:
-	buf breaking --against '.git#branch=main'
-
 generate:
 	rm -rf gen/go
 	buf generate
+
+breaking:
+	buf breaking --against '.git#branch=main'
+
+verify-go:
+	test -d gen/go
+
+check: lint generate breaking verify-go
